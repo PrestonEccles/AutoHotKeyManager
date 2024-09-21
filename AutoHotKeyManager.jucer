@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="H8boCm" name="AutoHotKeyManager" projectType="guiapp" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
+              cppLanguageStandard="17">
+  <MAINGROUP id="kBszt3" name="AutoHotKeyManager">
+    <FILE id="N9pVMh" name="AutoHotKey-8.png" compile="0" resource="1"
+          file="AutoHotKey-8.png"/>
+    <GROUP id="{E62EA554-8C76-DCD4-206F-2E03E16E36F8}" name="Source">
+      <FILE id="j4dlYU" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+      <FILE id="qRSVLT" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
+      <FILE id="yJpi1L" name="MainComponent.cpp" compile="1" resource="0"
+            file="Source/MainComponent.cpp"/>
+    </GROUP>
+  </MAINGROUP>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
+  <EXPORTFORMATS>
+    <VS2022 targetFolder="Builds/VisualStudio2022" smallIcon="N9pVMh" bigIcon="N9pVMh">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="AutoHotKeyManager"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="AutoHotKeyManager"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_core" path="../../../Installers/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../../Installers/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../../Installers/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../../Installers/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../../Installers/JUCE/modules"/>
+      </MODULEPATHS>
+    </VS2022>
+  </EXPORTFORMATS>
+  <MODULES>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
+</JUCERPROJECT>
