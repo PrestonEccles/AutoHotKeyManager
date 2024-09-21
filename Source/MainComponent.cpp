@@ -15,29 +15,26 @@ MainComponent::MainComponent() : m_loadProcessThread(nullptr), selectedHotKeyInd
         juce::String fileName = m_hotKeyFiles[i]->getFileName();
 
         juce::String folderName = m_hotKeyFiles[i]->getParentDirectory().getFileName();
-        juce::String displayName = folderName != "AutoHotKey" ? folderName + '_' + fileName : fileName;
 
         HotKeyUI* newHotKey = new HotKeyUI();
         m_hotKeyUI.add(newHotKey);
 
         newHotKey->fileName = fileName;
         newHotKey->parentFolderName = m_hotKeyFiles[i]->getParentDirectory().getFileName();
+        addHotKeyUIToGroup(newHotKey);
         
-        newHotKey->displayName.setText(displayName);
+        newHotKey->displayName.setText(fileName);
         newHotKey->displayName.setReadOnly(true);
-        m_viewComponent.addAndMakeVisible(newHotKey->displayName);
+        m_viewportContent.addAndMakeVisible(newHotKey->displayName);
 
-        newHotKey->processToggle.setButtonText("Active");
-        newHotKey->processToggle.setName(displayName);
         newHotKey->processToggle.onClick = [=]() 
         {
             setHotKeyProcessState(newHotKey, newHotKey->processToggle.getToggleState());
         };
-        m_viewComponent.addAndMakeVisible(newHotKey->processToggle);
+        m_viewportContent.addAndMakeVisible(newHotKey->processToggle);
 
-        newHotKey->startupTogggle.setButtonText("Is Startup");
         newHotKey->startupTogggle.onClick = [this]() { saveStartupHotKeys(); };
-        m_viewComponent.addAndMakeVisible(newHotKey->startupTogggle);
+        m_viewportContent.addAndMakeVisible(newHotKey->startupTogggle);
     }
 
     //scripts to run on start
@@ -58,15 +55,16 @@ MainComponent::MainComponent() : m_loadProcessThread(nullptr), selectedHotKeyInd
         }
     }
 
-    int parentHeight = m_hotKeyFiles.size() * UI_HEIGHT;
+    int parentHeight = (m_hotKeyFiles.size() + m_hotKeyUIGroups.size()) * UI_HEIGHT;
+    m_viewportContent.setSize(NAME_WIDTH + BUTTON_WIDTH * 2, parentHeight);
+
     const int MAX_PARENT_HEIGHT = 785;
     parentHeight = parentHeight > MAX_PARENT_HEIGHT ? MAX_PARENT_HEIGHT : parentHeight;
-
-    this->setScrollBarsShown(false, false, true, false);
     setSize(NAME_WIDTH + BUTTON_WIDTH * 2, parentHeight);
-
-    addAndMakeVisible(&m_viewComponent);
-    setViewedComponent(&m_viewComponent);
+    setScrollBarsShown(true, false, true, true);
+    
+    addAndMakeVisible(&m_viewportContent);
+    setViewedComponent(&m_viewportContent);
 }
 
 MainComponent::~MainComponent()
@@ -74,6 +72,11 @@ MainComponent::~MainComponent()
     for (int i = 0; i < m_hotKeyUI.size(); i++)
     {
         delete m_hotKeyUI[i];
+    }
+    
+    for (int i = 0; i < m_hotKeyGroupHeaders.size(); i++)
+    {
+        delete m_hotKeyGroupHeaders[i];
     }
 
     for (int i = 0; i < m_hotKeyFiles.size(); i++)
@@ -102,18 +105,28 @@ void MainComponent::paint (juce::Graphics& g)
 
 void MainComponent::resized()
 {
-    for (int i = 0; i < m_hotKeyUI.size(); i++)
+    int currentPositionY = 0;
+
+    for (int i = 0; i < m_hotKeyUIGroups.size(); i++)
     {
-        m_hotKeyUI[i]->displayName.setSize(NAME_WIDTH, UI_HEIGHT);
-        m_hotKeyUI[i]->displayName.setTopLeftPosition(0, UI_HEIGHT * i);
+        m_hotKeyGroupHeaders[i]->setSize(getWidth(), UI_HEIGHT);
+        m_hotKeyGroupHeaders[i]->setTopLeftPosition(0, currentPositionY);
+        currentPositionY += UI_HEIGHT;
 
-        m_hotKeyUI[i]->processToggle.setSize(BUTTON_WIDTH, UI_HEIGHT);
-        m_hotKeyUI[i]->processToggle.setTopLeftPosition(NAME_WIDTH, UI_HEIGHT * i);
+        for (auto& hotkey : m_hotKeyUIGroups[i])
+        {
+            hotkey->displayName.setSize(NAME_WIDTH, UI_HEIGHT);
+            hotkey->displayName.setTopLeftPosition(0, currentPositionY);
 
-        m_hotKeyUI[i]->startupTogggle.setSize(BUTTON_WIDTH, UI_HEIGHT);
-        m_hotKeyUI[i]->startupTogggle.setTopLeftPosition(NAME_WIDTH + BUTTON_WIDTH, UI_HEIGHT * i);
+            hotkey->processToggle.setSize(BUTTON_WIDTH, UI_HEIGHT);
+            hotkey->processToggle.setTopLeftPosition(NAME_WIDTH, currentPositionY);
+
+            hotkey->startupTogggle.setSize(BUTTON_WIDTH, UI_HEIGHT);
+            hotkey->startupTogggle.setTopLeftPosition(NAME_WIDTH + BUTTON_WIDTH, currentPositionY);
+
+            currentPositionY += UI_HEIGHT;
+        }
     }
-    m_viewComponent.setSize(getWidth(), getHeight());
 }
 
 bool MainComponent::keyPressed(const juce::KeyPress& key)
@@ -344,6 +357,29 @@ HotKeyUI* MainComponent::getHotKeyUI(juce::String fileName)
         }
     }
     return nullptr;
+}
+
+void MainComponent::addHotKeyUIToGroup(HotKeyUI* newHotKeyUI)
+{
+    for (auto& group : m_hotKeyUIGroups)
+    {
+        if (group[0]->parentFolderName == newHotKeyUI->parentFolderName)
+        {
+            group.add(newHotKeyUI);
+            return;
+        }
+    }
+
+    juce::Array<HotKeyUI*> newGroup;
+    newGroup.add(newHotKeyUI);
+    m_hotKeyUIGroups.add(newGroup);
+
+    auto newGroupHeader = new juce::TextEditor();
+    m_hotKeyGroupHeaders.add(newGroupHeader);
+    m_viewportContent.addAndMakeVisible(newGroupHeader);
+    newGroupHeader->setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colour(64, 68, 70));
+    newGroupHeader->setJustification(juce::Justification::topLeft);
+    newGroupHeader->setText(newHotKeyUI->parentFolderName, false);
 }
 
 LoadHotKeyProcessThread::LoadHotKeyProcessThread(HotKeyProcess* newProcess) 

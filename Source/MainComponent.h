@@ -65,16 +65,16 @@ private:
     int selectedHotKeyIndex;
 
     //==============================================================================
-    //UI functions:
+    //UI members:
 
     HotKeyUI* getHotKeyUI(juce::String fileName);
+    void addHotKeyUIToGroup(HotKeyUI* newHotKeyUI);
 
-    //==============================================================================
-    //UI variables:
-
-    juce::Component m_viewComponent;
+    juce::Component m_viewportContent;
 
     juce::Array<HotKeyUI*> m_hotKeyUI;
+    juce::Array<juce::Array<HotKeyUI*>> m_hotKeyUIGroups;
+    juce::Array<juce::TextEditor*> m_hotKeyGroupHeaders;
 
     const int UI_HEIGHT = 30;
     const int NAME_WIDTH = 300;
@@ -116,8 +116,8 @@ struct HotKeyUI
     juce::String parentFolderName;
 
     juce::TextEditor displayName;
-    juce::ToggleButton processToggle;
-    juce::ToggleButton startupTogggle;
+    juce::ToggleButton processToggle{ "Active" };
+    juce::ToggleButton startupTogggle{ "Is Startup" };
 
     juce::Colour currentLoadStatusColor;
     inline static const int textEditorColourId = juce::TextEditor::ColourIds::backgroundColourId;
