@@ -33,7 +33,15 @@ MainComponent::MainComponent() : m_loadProcessThread(nullptr), selectedHotKeyInd
         };
         m_viewportContent.addAndMakeVisible(newHotKey->processToggle);
 
-        newHotKey->startupTogggle.onClick = [this]() { saveStartupHotKeys(); };
+        newHotKey->startupTogggle.onClick = [=]() 
+        { 
+            saveStartupHotKeys();
+            if (newHotKey->processToggle.getToggleState())
+            {
+                newHotKey->currentLoadStatusColor = newHotKey->startupTogggle.getToggleState() ? juce::Colours::yellowgreen : juce::Colours::green;
+                newHotKey->applyStatusColor(true);
+            }
+        };
         m_viewportContent.addAndMakeVisible(newHotKey->startupTogggle);
     }
 
@@ -155,7 +163,7 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         deselectAllHotKeys();
         return false;
     }
-    if (key.getKeyCode() == key.returnKey)
+    if (key.isKeyCode(key.returnKey) || key.isKeyCode(key.spaceKey))
     {
         currentKeyStrokes = "";
 
@@ -172,13 +180,19 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
 
         return true;
     }
-    if (key.getKeyCode() == key.backspaceKey)
+    if (key.isKeyCode(key.backspaceKey) || key.isKeyCode(key.getModifiers().altModifier))
     {
         deselectAllHotKeys();
         return true;
     }
 
     return false;
+}
+
+void MainComponent::modifierKeysChanged(const juce::ModifierKeys& modifiers)
+{
+    if (modifiers.isAltDown())
+        deselectAllHotKeys();
 }
 
 void MainComponent::timerCallback()
@@ -409,7 +423,11 @@ void LoadHotKeyProcessThread::run()
 
 void HotKeyUI::processLoaded(bool succeeded, bool repaint)
 {
-    currentLoadStatusColor = succeeded ? juce::Colours::green : juce::Colours::red;
+    if (succeeded)
+        currentLoadStatusColor = startupTogggle.getToggleState() ? juce::Colours::yellowgreen : juce::Colours::green;
+    else
+        currentLoadStatusColor = juce::Colours::red;
+
     applyStatusColor(repaint);
 }
 

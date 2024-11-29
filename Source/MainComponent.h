@@ -20,7 +20,8 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
-    bool keyPressed(const juce::KeyPress& key);
+    bool keyPressed(const juce::KeyPress& key) override;
+    void modifierKeysChanged(const juce::ModifierKeys& modifiers) override;
 
     void timerCallback() override;
 
@@ -100,9 +101,9 @@ struct HotKeyProcess
 {
     juce::String fileName;
     juce::String fullFilePath;
-    STARTUPINFO* startupInfo;
-    PROCESS_INFORMATION* processInfo;
-    bool loadSucceeded;
+    STARTUPINFO* startupInfo = nullptr;
+    PROCESS_INFORMATION* processInfo = nullptr;
+    bool loadSucceeded = false;
 };
 struct HotKeyUI
 {
