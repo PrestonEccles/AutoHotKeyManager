@@ -139,6 +139,17 @@ void MainComponent::resized()
 
 bool MainComponent::keyPressed(const juce::KeyPress& key)
 {
+    if (key.getModifiers().isCtrlDown() && (key.isKeyCode(key.backspaceKey) || key.isKeyCode(key.deleteKey))) //exist all non-startup hot key scripts
+    {
+        for (auto& hotKeyUI : m_hotKeyUI)
+        {
+            if (hotKeyUI->processToggle.getToggleState() && !hotKeyUI->startupTogggle.getToggleState())
+            {
+                setHotKeyProcessState(hotKeyUI, false);
+            }
+        }
+        return true;
+    }
     if (key.getKeyCode() >= 'A' && key.getKeyCode() <= 'Z')
     {
         currentKeyStrokes += (char) key.getKeyCode();
