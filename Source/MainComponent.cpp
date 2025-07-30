@@ -3,8 +3,12 @@
 //==============================================================================
 MainComponent::MainComponent() : m_loadProcessThread(nullptr), selectedHotKeyIndex(-1)
 {
+    //g_savePath = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile).getFullPathName() + "\\SaveData";
+    //jString appPaths = juce::File(g_savePath + "\\AHKAppPaths.txt").loadFileAsString();
+
+
     juce::String exePath = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile).getFullPathName();
-    juce::String hotKeyScriptsDirectory = exePath.substring(0, exePath.indexOf("AutoHotKey") + 10);
+    juce::String hotKeyScriptsDirectory = exePath.substring(0, exePath.indexOf("AutoHotKey") + 10) + "\\AHKScripts";
     addHotKeyPath(hotKeyScriptsDirectory);
     addHotKeyPath(hotKeyScriptsDirectory + "\\Mpq");
     addHotKeyPath(hotKeyScriptsDirectory + "\\Reaper");
@@ -32,6 +36,14 @@ MainComponent::MainComponent() : m_loadProcessThread(nullptr), selectedHotKeyInd
             setHotKeyProcessState(newHotKey, newHotKey->processToggle.getToggleState());
         };
         m_viewportContent.addAndMakeVisible(newHotKey->processToggle);
+
+        juce::File script = m_hotKeyFiles[i]->getFullPathName().replace(".exe", ".ahk");
+        newHotKey->revealScriptFileButton.onClick = [=]()
+        {
+            if (script.existsAsFile())
+                script.revealToUser();
+        };
+        m_viewportContent.addAndMakeVisible(newHotKey->revealScriptFileButton);
 
         newHotKey->startupTogggle.onClick = [=]() 
         { 
@@ -62,17 +74,12 @@ MainComponent::MainComponent() : m_loadProcessThread(nullptr), selectedHotKeyInd
             }
         }
     }
-
-    int parentHeight = (m_hotKeyFiles.size() + m_hotKeyUIGroups.size()) * UI_HEIGHT;
-    m_viewportContent.setSize(NAME_WIDTH + BUTTON_WIDTH * 2, parentHeight);
-
-    const int MAX_PARENT_HEIGHT = 785;
-    parentHeight = parentHeight > MAX_PARENT_HEIGHT ? MAX_PARENT_HEIGHT : parentHeight;
-    setSize(NAME_WIDTH + BUTTON_WIDTH * 2, parentHeight);
-    setScrollBarsShown(true, false, true, true);
     
     addAndMakeVisible(&m_viewportContent);
     setViewedComponent(&m_viewportContent);
+
+    setScrollBarsShown(true, false, true, true);
+    setSize(525, 750);
 }
 
 MainComponent::~MainComponent()
@@ -113,28 +120,24 @@ void MainComponent::paint (juce::Graphics& g)
 
 void MainComponent::resized()
 {
-    int currentPositionY = 0;
+    Bounds contentBounds(getWidth(), 0);
 
     for (int i = 0; i < m_hotKeyUIGroups.size(); i++)
     {
-        m_hotKeyGroupHeaders[i]->setSize(getWidth(), UI_HEIGHT);
-        m_hotKeyGroupHeaders[i]->setTopLeftPosition(0, currentPositionY);
-        currentPositionY += UI_HEIGHT;
+        m_hotKeyGroupHeaders[i]->setBounds(expandBottomOfBounds(contentBounds, 25));
 
         for (auto& hotkey : m_hotKeyUIGroups[i])
         {
-            hotkey->displayName.setSize(NAME_WIDTH, UI_HEIGHT);
-            hotkey->displayName.setTopLeftPosition(0, currentPositionY);
+            Bounds hotKeyBounds = expandBottomOfBounds(contentBounds, 25);
 
-            hotkey->processToggle.setSize(BUTTON_WIDTH, UI_HEIGHT);
-            hotkey->processToggle.setTopLeftPosition(NAME_WIDTH, currentPositionY);
-
-            hotkey->startupTogggle.setSize(BUTTON_WIDTH, UI_HEIGHT);
-            hotkey->startupTogggle.setTopLeftPosition(NAME_WIDTH + BUTTON_WIDTH, currentPositionY);
-
-            currentPositionY += UI_HEIGHT;
+            hotkey->displayName.setBounds(hotKeyBounds.removeFromLeft(300));
+            hotkey->processToggle.setBounds(hotKeyBounds.removeFromLeft(100));
+            hotkey->startupTogggle.setBounds(hotKeyBounds.removeFromLeft(100));
+            hotkey->revealScriptFileButton.setBounds(hotKeyBounds.removeFromLeft(25));
         }
     }
+
+    m_viewportContent.setBounds(contentBounds);
 }
 
 bool MainComponent::keyPressed(const juce::KeyPress& key)

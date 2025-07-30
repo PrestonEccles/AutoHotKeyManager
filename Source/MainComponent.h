@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <tchar.h>
 
+#include "Globals.h"
+
 class LoadHotKeyProcessThread;
 struct HotKeyUI;
 struct HotKeyProcess;
@@ -119,6 +121,7 @@ struct HotKeyUI
     juce::TextEditor displayName;
     juce::ToggleButton processToggle{ "Active" };
     juce::ToggleButton startupTogggle{ "Is Startup" };
+    juce::TextButton revealScriptFileButton{ "..." };
 
     juce::Colour currentLoadStatusColor;
     inline static const int textEditorColourId = juce::TextEditor::ColourIds::backgroundColourId;

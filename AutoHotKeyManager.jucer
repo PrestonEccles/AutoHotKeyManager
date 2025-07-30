@@ -8,6 +8,7 @@
           file="AutoHotKey-8.png"/>
     <GROUP id="{E62EA554-8C76-DCD4-206F-2E03E16E36F8}" name="Source">
       <FILE id="j4dlYU" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+      <FILE id="OOGDlz" name="Globals.h" compile="0" resource="0" file="Source/Globals.h"/>
       <FILE id="qRSVLT" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
       <FILE id="yJpi1L" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>
