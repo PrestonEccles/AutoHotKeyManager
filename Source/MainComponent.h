@@ -12,7 +12,7 @@ class LoadHotKeyProcessThread;
 struct HotKeyUI;
 struct HotKeyProcess;
 
-class MainComponent  : public juce::Viewport, juce::Timer
+class MainComponent  : public juce::Component, juce::Timer
 {
 public:
     //==============================================================================
@@ -26,6 +26,8 @@ public:
     void modifierKeysChanged(const juce::ModifierKeys& modifiers) override;
 
     void timerCallback() override;
+
+    juce::File getAppPathsFile() { return g_savePath + "\\AHKAppPaths.txt"; }
 
     //==============================================================================
 
@@ -73,15 +75,13 @@ private:
     HotKeyUI* getHotKeyUI(juce::String fileName);
     void addHotKeyUIToGroup(HotKeyUI* newHotKeyUI);
 
-    juce::Component m_viewportContent;
+    juce::TextButton m_revealSaveDataFileButton{ "+" };
+
+    juce::Viewport m_viewport;
 
     juce::Array<HotKeyUI*> m_hotKeyUI;
     juce::Array<juce::Array<HotKeyUI*>> m_hotKeyUIGroups;
     juce::Array<juce::TextEditor*> m_hotKeyGroupHeaders;
-
-    const int UI_HEIGHT = 30;
-    const int NAME_WIDTH = 300;
-    const int BUTTON_WIDTH = 100;
 
     //==============================================================================
 

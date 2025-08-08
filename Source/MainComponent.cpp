@@ -3,16 +3,23 @@
 //==============================================================================
 MainComponent::MainComponent() : m_loadProcessThread(nullptr), selectedHotKeyIndex(-1)
 {
-    //g_savePath = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile).getFullPathName() + "\\SaveData";
-    //jString appPaths = juce::File(g_savePath + "\\AHKAppPaths.txt").loadFileAsString();
+    g_savePath = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile).getParentDirectory().getFullPathName() + "\\SaveData";
+    getAppPathsFile().create();
+    juce::StringArray appFolderPaths = StringFunctions::split(getAppPathsFile().loadFileAsString(), "\r\n");
+    for (auto& path : appFolderPaths)
+    {
+        addHotKeyPath(path);
+    }
 
+    addAndMakeVisible(m_revealSaveDataFileButton);
+    m_revealSaveDataFileButton.onClick = [=]
+    {
+        getAppPathsFile().revealToUser();
+    };
 
-    juce::String exePath = juce::File::getSpecialLocation(juce::File::SpecialLocationType::currentExecutableFile).getFullPathName();
-    juce::String hotKeyScriptsDirectory = exePath.substring(0, exePath.indexOf("AutoHotKey") + 10) + "\\AHKScripts";
-    addHotKeyPath(hotKeyScriptsDirectory);
-    addHotKeyPath(hotKeyScriptsDirectory + "\\Mpq");
-    addHotKeyPath(hotKeyScriptsDirectory + "\\Reaper");
-    addHotKeyPath(hotKeyScriptsDirectory + "\\Programming");
+    addAndMakeVisible(m_viewport);
+    m_viewport.setViewedComponent(new juce::Component());
+    m_viewport.setScrollBarsShown(true, false, true, true);
 
     for (int i = 0; i < m_hotKeyFiles.size(); i++)
     {
@@ -29,13 +36,13 @@ MainComponent::MainComponent() : m_loadProcessThread(nullptr), selectedHotKeyInd
         
         newHotKey->displayName.setText(fileName);
         newHotKey->displayName.setReadOnly(true);
-        m_viewportContent.addAndMakeVisible(newHotKey->displayName);
+        m_viewport.getViewedComponent()->addAndMakeVisible(newHotKey->displayName);
 
         newHotKey->processToggle.onClick = [=]() 
         {
             setHotKeyProcessState(newHotKey, newHotKey->processToggle.getToggleState());
         };
-        m_viewportContent.addAndMakeVisible(newHotKey->processToggle);
+        m_viewport.getViewedComponent()->addAndMakeVisible(newHotKey->processToggle);
 
         juce::File script = m_hotKeyFiles[i]->getFullPathName().replace(".exe", ".ahk");
         newHotKey->revealScriptFileButton.onClick = [=]()
@@ -43,7 +50,7 @@ MainComponent::MainComponent() : m_loadProcessThread(nullptr), selectedHotKeyInd
             if (script.existsAsFile())
                 script.revealToUser();
         };
-        m_viewportContent.addAndMakeVisible(newHotKey->revealScriptFileButton);
+        m_viewport.getViewedComponent()->addAndMakeVisible(newHotKey->revealScriptFileButton);
 
         newHotKey->startupTogggle.onClick = [=]() 
         { 
@@ -54,7 +61,7 @@ MainComponent::MainComponent() : m_loadProcessThread(nullptr), selectedHotKeyInd
                 newHotKey->applyStatusColor(true);
             }
         };
-        m_viewportContent.addAndMakeVisible(newHotKey->startupTogggle);
+        m_viewport.getViewedComponent()->addAndMakeVisible(newHotKey->startupTogggle);
     }
 
     //scripts to run on start
@@ -74,12 +81,8 @@ MainComponent::MainComponent() : m_loadProcessThread(nullptr), selectedHotKeyInd
             }
         }
     }
-    
-    addAndMakeVisible(&m_viewportContent);
-    setViewedComponent(&m_viewportContent);
 
-    setScrollBarsShown(true, false, true, true);
-    setSize(525, 750);
+    setSize(550, 750);
 }
 
 MainComponent::~MainComponent()
@@ -120,24 +123,31 @@ void MainComponent::paint (juce::Graphics& g)
 
 void MainComponent::resized()
 {
-    Bounds contentBounds(getWidth(), 0);
+    Bounds localBounds(getLocalBounds());
 
-    for (int i = 0; i < m_hotKeyUIGroups.size(); i++)
+    m_revealSaveDataFileButton.setBounds(localBounds.removeFromTop(25).removeFromRight(25));
+
     {
-        m_hotKeyGroupHeaders[i]->setBounds(expandBottomOfBounds(contentBounds, 25));
+        Bounds contentBounds(getWidth(), 0);
 
-        for (auto& hotkey : m_hotKeyUIGroups[i])
+        for (int i = 0; i < m_hotKeyUIGroups.size(); i++)
         {
-            Bounds hotKeyBounds = expandBottomOfBounds(contentBounds, 25);
+            m_hotKeyGroupHeaders[i]->setBounds(expandBottomOfBounds(contentBounds, 25));
 
-            hotkey->displayName.setBounds(hotKeyBounds.removeFromLeft(300));
-            hotkey->processToggle.setBounds(hotKeyBounds.removeFromLeft(100));
-            hotkey->startupTogggle.setBounds(hotKeyBounds.removeFromLeft(100));
-            hotkey->revealScriptFileButton.setBounds(hotKeyBounds.removeFromLeft(25));
+            for (auto& hotkey : m_hotKeyUIGroups[i])
+            {
+                Bounds hotKeyBounds = expandBottomOfBounds(contentBounds, 25);
+
+                hotkey->displayName.setBounds(hotKeyBounds.removeFromLeft(300));
+                hotkey->processToggle.setBounds(hotKeyBounds.removeFromLeft(100));
+                hotkey->startupTogggle.setBounds(hotKeyBounds.removeFromLeft(100));
+                hotkey->revealScriptFileButton.setBounds(hotKeyBounds.removeFromLeft(25));
+            }
         }
-    }
 
-    m_viewportContent.setBounds(contentBounds);
+        m_viewport.getViewedComponent()->setBounds(contentBounds);
+        m_viewport.setBounds(localBounds);
+    }
 }
 
 bool MainComponent::keyPressed(const juce::KeyPress& key)
@@ -404,7 +414,7 @@ void MainComponent::addHotKeyUIToGroup(HotKeyUI* newHotKeyUI)
 
     auto newGroupHeader = new juce::TextEditor();
     m_hotKeyGroupHeaders.add(newGroupHeader);
-    m_viewportContent.addAndMakeVisible(newGroupHeader);
+    m_viewport.getViewedComponent()->addAndMakeVisible(newGroupHeader);
     newGroupHeader->setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colour(64, 68, 70));
     newGroupHeader->setJustification(juce::Justification::topLeft);
     newGroupHeader->setText(newHotKeyUI->parentFolderName, false);
