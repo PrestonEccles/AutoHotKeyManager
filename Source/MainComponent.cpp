@@ -209,6 +209,16 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         deselectAllHotKeys();
         return true;
     }
+    if (key.isKeyCode(key.escapeKey))
+    {
+        auto currentProcesses = m_hotKeyProcesses;
+        for (auto& process : currentProcesses)
+        {
+            HotKeyUI* hotKeyUI = getHotKeyUI(process->fileName);
+            if (!hotKeyUI->startupTogggle.getToggleState())
+                setHotKeyProcessState(hotKeyUI, false); //will change m_hotKeyProcesses
+        }
+    }
 
     return false;
 }

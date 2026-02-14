@@ -37,6 +37,7 @@ private:
 
     void addHotKeyPath(juce::String path);
 
+    //will change m_hotKeyProcesses array
     void setHotKeyProcessState(HotKeyUI* hotKeyUI, bool newState);
 
     bool loadHotKeyProcess(const juce::String* fileName);
